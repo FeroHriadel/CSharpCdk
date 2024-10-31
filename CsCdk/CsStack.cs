@@ -23,6 +23,7 @@ namespace CsCdkStack
                 RemovalPolicy = RemovalPolicy.DESTROY
             });
 
+
             //create lambdas:
             var getItemsLambda = new Function(this, "GetItemsLambda", new FunctionProps
             {
@@ -36,8 +37,23 @@ namespace CsCdkStack
                 }
             });
 
+            var createItemLambda = new Function(this, "CreateItemLambda", new FunctionProps
+            {
+                Runtime = Runtime.DOTNET_6,
+                Code = Code.FromAsset("../CsLambdaHandlers/bin/Release/net6.0"),
+                Handler = "CsLambdaHandlers::CreateItem.LambdaFunction::FunctionHandler",
+                Timeout = Duration.Seconds(10),
+                Environment = new Dictionary<string, string>
+                {
+                    { "TABLE_NAME", itemsTable.TableName }
+                }
+            });
+
+
             //add table rights to lambdas:
             itemsTable.GrantReadData(getItemsLambda);
+            itemsTable.GrantWriteData(createItemLambda);
+
 
             //create api gateway:
             var api = new RestApi(this, "MyApi", new RestApiProps
@@ -46,9 +62,11 @@ namespace CsCdkStack
                 Description = "testing Csharp apigw"
             });
 
+
             //add endpoints to apigateway:
             var getItemsResource = api.Root.AddResource("items");
             getItemsResource.AddMethod("GET", new LambdaIntegration(getItemsLambda));
+            getItemsResource.AddMethod("POST", new LambdaIntegration(createItemLambda));
         }
     }
 }
