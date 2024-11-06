@@ -4,6 +4,8 @@ using Amazon.CDK.AWS.APIGateway;
 using Amazon.CDK.AWS.DynamoDB;
 using Constructs;
 
+//this file is not used anymore!
+
 namespace CsCdkStack
 {
     public class CsStack : Stack
