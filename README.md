@@ -12,7 +12,7 @@ AWS Cdk with C# cookbook
 - clone this repo
 - `cd CsLambdaHandlers` & `dotnet build --configuration Release`
 - `cd ../CsCdk` & `dotnet build --configuration Release`
-- `cdk deploy --profile yourprofile`
+- `cdk deploy --all --profile yourprofile`
 <br /><br /><br />
 
 
