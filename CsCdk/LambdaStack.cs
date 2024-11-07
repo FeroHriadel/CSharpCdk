@@ -8,13 +8,13 @@ namespace CsCdkStack
 {
     public class LambdaStack : Stack
     {
-        public Function GetItemsLambda { get; private set; }
-        public Function CreateItemLambda { get; private set; }
+        public LambdaFunctions Lambdas { get; private set; } //class that holds all lambdas (see LambdaFunctions.cs)
 
-        public LambdaStack(Constructs.Construct scope, string id, Table itemsTable, IStackProps props = null) : base(scope, id, props)
+        public LambdaStack(Constructs.Construct scope, string id, Table itemsTable, IStackProps props = null) 
+            : base(scope, id, props)
         {
             // Define the GetItemsLambda
-            GetItemsLambda = new Function(this, "GetItemsLambda", new FunctionProps
+            var getItemsLambda = new Function(this, "GetItemsLambda", new FunctionProps
             {
                 Runtime = Runtime.DOTNET_6,
                 Code = Code.FromAsset("../CsLambdaHandlers/bin/Release/net6.0"),
@@ -27,7 +27,7 @@ namespace CsCdkStack
             });
 
             // Define the CreateItemLambda
-            CreateItemLambda = new Function(this, "CreateItemLambda", new FunctionProps
+            var createItemLambda = new Function(this, "CreateItemLambda", new FunctionProps
             {
                 Runtime = Runtime.DOTNET_6,
                 Code = Code.FromAsset("../CsLambdaHandlers/bin/Release/net6.0"),
@@ -40,8 +40,15 @@ namespace CsCdkStack
             });
 
             // Grant DynamoDB table permissions
-            itemsTable.GrantReadData(GetItemsLambda);
-            itemsTable.GrantWriteData(CreateItemLambda);
+            itemsTable.GrantReadData(getItemsLambda);
+            itemsTable.GrantWriteData(createItemLambda);
+
+            // Assign Lambdas to the Lambdas property
+            Lambdas = new LambdaFunctions
+            {
+                GetItemsLambda = getItemsLambda,
+                CreateItemLambda = createItemLambda
+            };
         }
     }
 }

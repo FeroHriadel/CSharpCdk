@@ -14,8 +14,8 @@ namespace CsCdk
             // Create LambdaStack and pass the table from DynamoStack
             var lambdaStack = new CsCdkStack.LambdaStack(app, "LambdaStack", dynamoStack.ItemsTable);
 
-            // Create ApiGatewayStack and pass the Lambdas from LambdaStack
-            new CsCdkStack.ApiGatewayStack(app, "ApiGatewayStack", lambdaStack.GetItemsLambda, lambdaStack.CreateItemLambda);
+            // Create ApiGatewayStack and pass the Lambdas from LambdaFunctions.cs (populated in LambdaStack.cs)
+            new CsCdkStack.ApiGatewayStack(app, "ApiGatewayStack", lambdaStack.Lambdas);
 
             app.Synth();
         }
