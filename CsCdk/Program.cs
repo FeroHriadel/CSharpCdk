@@ -8,13 +8,13 @@ namespace CsCdk
         {
             var app = new App();
 
-            // Create DynamoStack and retrieve the table
             var dynamoStack = new CsCdkStack.DynamoStack(app, "DynamoStack");
 
-            // Create LambdaStack and pass the table from DynamoStack
-            var lambdaStack = new CsCdkStack.LambdaStack(app, "LambdaStack", dynamoStack.ItemsTable);
+            var bucketStack = new CsCdkStack.BucketStack(app, "BucketStack");
 
-            // Create ApiGatewayStack and pass the Lambdas from LambdaFunctions.cs (populated in LambdaStack.cs)
+            var lambdaStack = new CsCdkStack.LambdaStack(app, "LambdaStack", dynamoStack.ItemsTable, bucketStack.ImagesBucket);
+
+
             new CsCdkStack.ApiGatewayStack(app, "ApiGatewayStack", lambdaStack.Lambdas);
 
             app.Synth();

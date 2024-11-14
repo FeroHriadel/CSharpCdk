@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <input type="file" name="fileInput" id="fileInput">
+
+
+
+  <script>
+    //elements
+    const fileInputEl = document.getElementById('fileInput');
+
+
+    //values
+    const apiUrl = 'https://dpwl0iqpdf.execute-api.us-east-1.amazonaws.com/prod';
+    const getUploadLinkUrl = apiUrl + '/getuploadlink';
+
+
+    //helpers
+    function loadImage(e) {
+      return new Promise(resolve => {
+          const file = (e.target && e.target.files && e.target.files.length) ? e.target.files[0] : null;
+          if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                  const base64 = reader.result;
+                  const fileName = file.name;
+                  resolve({fileName, base64: base64});
+              };
+              reader.readAsDataURL(file);
+          }
+      })
+    }
+
+    async function getUploadUrl(fileName) {
+      const options = {body: JSON.stringify({fileName}), headers: {'Content-Type': 'application/json'}, method: 'POST'};
+      const res = await fetch(getUploadLinkUrl, options);
+      const data = await res.json();
+      return data;
+    }
+
+    function getObjectUrlFromUrl(url) {
+      const objectUrl = url.split('?')[0];
+      return objectUrl;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => { resolve(reader.result); };
+          reader.readAsDataURL(file);
+          reader.onerror = reject;
+      });
+    }
+
+    function base64IntoBlob(base64) {
+      const binary = atob(base64.split(',')[1]);
+      const array = [];
+      for (let i = 0; i < binary.length; i++) {
+          array.push(binary.charCodeAt(i));
+      }
+      const blobData = new Blob([new Uint8Array(array)], {type: 'image/png'});
+      return blobData;
+    }
+
+    async function pushBlobToObjectUrl(objectUrl, blobData) {
+      const res = await fetch(objectUrl, {method: 'PUT', body: blobData});
+      if (!res.ok) return {error: 'Failed to push Blob to url', ok: false};
+      return {ok: true, error: ''};
+    }
+
+    async function uploadImage(fileName, imageData) {
+      const uploadLink = await getUploadUrl(fileName); if (!uploadLink.url) return {error: 'Failed to get upload link', imageUrl: ''};
+      const objectUrl = getObjectUrlFromUrl(uploadLink.url);
+      const blobData = base64IntoBlob(imageData);
+      const pushRes = await pushBlobToObjectUrl(objectUrl, blobData); if (pushRes.error) return {error: JSON.stringify(pushRes.error), imageUrl: ''};
+      return {error: '', imageUrl: objectUrl};
+    }
+
+
+    //functions
+    async function onImageChange(e) {
+      try {
+        const base64res = await loadImage(e);
+        const { base64, fileName } = base64res; if (!base64res.base64) throw new Error('Failed to load Image');
+        const uploadRes = await uploadImage(fileName, base64);
+        console.log(uploadRes);
+      } catch (error) {
+        console.log(error);
+      } 
+    }
+
+
+    //subscriptions
+    fileInputEl.addEventListener('change', onImageChange);
+
+  </script>
+</body>
+</html>
